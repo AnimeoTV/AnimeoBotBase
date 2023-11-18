@@ -1,0 +1,23 @@
+{
+    "include": [ "src/*", "types/*" ],
+    "compileOnSave": true,
+    "compilerOptions": {
+        "allowJs": true,
+        "outDir": "dist",
+        "target": "ES2022",
+        "module": "NodeNext",
+        "declaration": true,
+        "strict": true,
+        "strictNullChecks": true,
+        "noImplicitAny": true,
+        "noImplicitThis": true,
+        "noImplicitReturns": true,
+        "noImplicitOverride": true,
+        "noUncheckedIndexedAccess":true,
+        "noPropertyAccessFromIndexSignature": true,
+        "removeComments": true,
+        "preserveConstEnums": true,
+        "resolveJsonModule": true,
+        "sourceMap": true
+    }
+}
