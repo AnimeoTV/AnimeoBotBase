@@ -156,8 +156,11 @@ function getInteractionParams<T>(
     const pickStore = (key: string): Partial<T> | null => {
         const value = store.get(key);
 
-        if (value)
-            store.delete(key);
+        // @TODO: What can we do here to prevent replay ?
+        // We can't delete the key from the store for modal components,
+        // it will break the session if the user cancel the modal.
+        // if (value)
+        //     store.delete(key);
 
         return value || null;
     };
