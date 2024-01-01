@@ -98,6 +98,7 @@ export interface InteractionFlowSchemaModal {
             label           : string;
             minLength?      : number;
             maxLength?      : number;
+            value?          : string;
             placeholder?    : string;
             required?       : boolean;
         }[];
@@ -360,6 +361,7 @@ function createInteractionContext<T>(): InteractionFlowContextProvider<T> {
                                                 style       : field.style,
                                                 custom_id   : field.name,
                                                 label       : field.label,
+                                                value       : field.value,
                                                 placeholder : field.placeholder,
                                                 required    : field.required,
                                             },
