@@ -23,6 +23,7 @@ const GlobalRoutes      = new Collection<string, GlobalRoute>();
 
 export enum ReplyType {
     Embed,
+    MultiEmbed,
     Modal,
 };
 
@@ -72,6 +73,20 @@ export interface InteractionFlowSchemaEmbed {
     };
 }
 
+export interface InteractionFlowSchemaMultiEmbed {
+    type        : ReplyType.MultiEmbed;
+    content?    : string;
+    embeds: {
+        title       : string;
+        description : string;
+        color?      : number;
+        thumbnail?  : string;
+        image?      : string;
+        footer?     : Discord.APIEmbedFooter;
+    }[];
+    components? : InteractionComponentType[][];
+}
+
 export interface InteractionFlowSchemaModal {
     type    : ReplyType.Modal;
     next    : string;
@@ -89,7 +104,7 @@ export interface InteractionFlowSchemaModal {
     };
 }
 
-export type InteractionFlowReplyOptions            = InteractionFlowSchemaEmbed | InteractionFlowSchemaModal;
+export type InteractionFlowReplyOptions            = InteractionFlowSchemaEmbed | InteractionFlowSchemaMultiEmbed | InteractionFlowSchemaModal;
 export type InteractionFlowNextFunction            = () => void;
 export type InteractionFlowMiddlewareFunction<T>   = (context: InteractionFlowContext<T>, next: InteractionFlowNextFunction) => any;
 
@@ -172,63 +187,76 @@ function getNextValue(next: string, suffix?: string): string {
         : next;
 }
 
-function buildEmbed(schema: InteractionFlowSchemaEmbed, suffix?: string): Discord.BaseMessageOptions {
-    return {
-        content: schema.content,
-        embeds: [
-            {
-                color       : schema.data.color,
-                title       : schema.data.title,
-                description : schema.data.description,
-                footer      : schema.data.footer,
+function buildEmbed(schema: InteractionFlowSchemaEmbed | InteractionFlowSchemaMultiEmbed, suffix?: string): Discord.BaseMessageOptions {
+    function buildSingleEmbed(schema: InteractionFlowSchemaEmbed["data"]) {
+        return {
+            color       : schema.color,
+            title       : schema.title,
+            description : schema.description,
+            footer      : schema.footer,
 
-                thumbnail: schema.data.thumbnail
-                    ? { url: schema.data.thumbnail }
-                    : undefined,
+            thumbnail: schema.thumbnail
+                ? { url: schema.thumbnail }
+                : undefined,
 
-                image: schema.data.image
-                    ? { url: schema.data.image }
-                    : undefined,
-            },
-        ],
-        components: (schema.data.components || []).map((components) => {
-            return <Discord.APIActionRowComponent<Discord.APIMessageActionRowComponent>>{
-                type        : Discord.ComponentType.ActionRow,
-                components  : components.map((component) => {
-                    if (component.type === ReplyComponentType.Button) {
-                        if (component.style === Discord.ButtonStyle.Link) {
-                            return <Discord.APIButtonComponentWithURL>({
-                                type        : Discord.ComponentType.Button,
-                                style       : component.style,
-                                emoji       : component.emoji,
-                                label       : component.label,
-                                url         : component.url,
-                                disabled    : component.disabled,
-                            });
+            image: schema.image
+                ? { url: schema.image }
+                : undefined,
+        };
+    }
 
-                        } else {
-                            return <Discord.APIButtonComponentWithCustomId>({
-                                type        : Discord.ComponentType.Button,
-                                style       : component.style,
-                                emoji       : component.emoji,
-                                label       : component.label,
-                                custom_id   : getNextValue(component.next, suffix),
-                                disabled    : component.disabled,
-                            });
-                        }
+    function buildSingleComponentRow(schema: InteractionComponentType[]): Discord.APIActionRowComponent<Discord.APIMessageActionRowComponent> {
+        return {
+            type        : Discord.ComponentType.ActionRow,
+            components  : schema.map((component) => {
+                if (component.type === ReplyComponentType.Button) {
+                    if (component.style === Discord.ButtonStyle.Link) {
+                        return <Discord.APIButtonComponentWithURL>({
+                            type        : Discord.ComponentType.Button,
+                            style       : component.style,
+                            emoji       : component.emoji,
+                            label       : component.label,
+                            url         : component.url,
+                            disabled    : component.disabled,
+                        });
 
                     } else {
-                        return <Discord.APIStringSelectComponent>({
-                            type        : Discord.ComponentType.StringSelect,
-                            placeholder : component.placeholder,
+                        return <Discord.APIButtonComponentWithCustomId>({
+                            type        : Discord.ComponentType.Button,
+                            style       : component.style,
+                            emoji       : component.emoji,
+                            label       : component.label,
                             custom_id   : getNextValue(component.next, suffix),
-                            options     : component.options,
+                            disabled    : component.disabled,
                         });
                     }
-                }),
-            };
-        }),
-    };
+
+                } else {
+                    return <Discord.APIStringSelectComponent>({
+                        type        : Discord.ComponentType.StringSelect,
+                        placeholder : component.placeholder,
+                        custom_id   : getNextValue(component.next, suffix),
+                        options     : component.options,
+                    });
+                }
+            }),
+        };
+    }
+
+    if (schema.type === ReplyType.MultiEmbed) {
+        return {
+            content     : schema.content,
+            embeds      : schema.embeds.map(buildSingleEmbed),
+            components  : (schema.components || []).map(buildSingleComponentRow),
+        };
+
+    } else {
+        return {
+            content     : schema.content,
+            embeds      : [ buildSingleEmbed(schema.data) ],
+            components  : (schema.data.components || []).map(buildSingleComponentRow),
+        };
+    }
 }
 
 function createInteractionContext<T>(): InteractionFlowContextProvider<T> {
@@ -344,6 +372,7 @@ function createInteractionContext<T>(): InteractionFlowContextProvider<T> {
                             }
                         }
 
+                        case ReplyType.MultiEmbed:
                         case ReplyType.Embed: {
                             const message: Discord.BaseMessageOptions = buildEmbed(schema, saveStore());
 

@@ -2,6 +2,7 @@
     "include": [ "src/*", "types/*" ],
     "compileOnSave": true,
     "compilerOptions": {
+        "incremental": true,
         "allowJs": true,
         "outDir": "dist",
         "target": "ES2022",
