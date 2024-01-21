@@ -109,6 +109,10 @@ export type InteractionFlowReplyOptions            = InteractionFlowSchemaEmbed 
 export type InteractionFlowNextFunction            = () => void;
 export type InteractionFlowMiddlewareFunction<T>   = (context: InteractionFlowContext<T>, next: InteractionFlowNextFunction) => any;
 
+export type InteractionFlowReplyExtraOptions = {
+    new?: boolean;
+};
+
 export interface InteractionFlowContext<T> {
     readonly store          : Partial<T>;
     readonly interaction    : Discord.Interaction;
@@ -349,7 +353,7 @@ function createInteractionContext<T>(): InteractionFlowContextProvider<T> {
                     return id;
                 };
 
-                const reply = async (schema: InteractionFlowReplyOptions): Promise<any> => {
+                const reply = async (schema: InteractionFlowReplyOptions, options: InteractionFlowReplyExtraOptions = {}): Promise<any> => {
                     switch (schema.type) {
                         case ReplyType.Modal: {
                             if (interaction.isCommand() || interaction.isMessageComponent()) {
@@ -380,6 +384,13 @@ function createInteractionContext<T>(): InteractionFlowContextProvider<T> {
                         case ReplyType.MultiEmbed:
                         case ReplyType.Embed: {
                             const message: Discord.BaseMessageOptions = buildEmbed(schema, saveStore());
+
+                            // Force a new message to be sent if the interaction comes from a message.
+                            if (options.new && interaction.isMessageComponent())
+                                return interaction.reply({
+                                    ...message,
+                                    ephemeral: true,
+                                });
 
                             return (interaction.isMessageComponent() || (interaction.isModalSubmit() && interaction.isFromMessage()))
                                 ? interaction.update(message)
