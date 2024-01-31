@@ -386,18 +386,40 @@ function createInteractionContext<T>(): InteractionFlowContextProvider<T> {
                             const message: Discord.BaseMessageOptions = buildEmbed(schema, saveStore());
 
                             // Force a new message to be sent if the interaction comes from a message.
-                            if (options.new && interaction.isMessageComponent())
-                                return interaction.reply({
-                                    ...message,
-                                    ephemeral: true,
-                                });
+                            if (options.new && interaction.isMessageComponent()) {
+                                if (interaction.replied) {
+                                    return interaction.followUp({
+                                        ...message,
+                                        ephemeral: true,
+                                    });
 
-                            return (interaction.isMessageComponent() || (interaction.isModalSubmit() && interaction.isFromMessage()))
-                                ? interaction.update(message)
-                                : interaction.reply({
-                                    ...message,
-                                    ephemeral: true,
-                                });
+                                } else {
+                                    return interaction.reply({
+                                        ...message,
+                                        ephemeral: true,
+                                    });
+                                }
+                            }
+
+                            if (interaction.isMessageComponent() || (interaction.isModalSubmit() && interaction.isFromMessage())) {
+                                if (interaction.replied) {
+                                    return interaction.editReply(message);
+
+                                } else {
+                                    return interaction.update(message);
+                                }
+
+                            } else {
+                                if (interaction.replied) {
+                                    return interaction.editReply(message);
+
+                                } else {
+                                    return interaction.reply({
+                                        ...message,
+                                        ephemeral: true,
+                                    });
+                                }
+                            }
                         }
                     }
                 };
