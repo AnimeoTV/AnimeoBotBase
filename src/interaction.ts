@@ -118,7 +118,7 @@ export interface InteractionFlowContext<T> {
     readonly interaction    : Discord.Interaction;
     readonly hasStore       : boolean;
     readonly isWildcard     : boolean;
-    reply(schema: InteractionFlowReplyOptions): Promise<any>;
+    reply(schema: InteractionFlowReplyOptions, options?: InteractionFlowReplyExtraOptions): Promise<any>;
 }
 
 export interface InteractionFlowRoute<T> {
@@ -370,6 +370,8 @@ function createInteractionContext<T>(): InteractionFlowContextProvider<T> {
                                                 label       : field.label,
                                                 value       : field.value,
                                                 placeholder : field.placeholder,
+                                                min_length  : field.minLength,
+                                                max_length  : field.maxLength,
                                                 required    : field.required,
                                             },
                                         ],
@@ -387,7 +389,7 @@ function createInteractionContext<T>(): InteractionFlowContextProvider<T> {
 
                             // Force a new message to be sent if the interaction comes from a message.
                             if (options.new && interaction.isMessageComponent()) {
-                                if (interaction.replied) {
+                                if (interaction.deferred || interaction.replied) {
                                     return interaction.followUp({
                                         ...message,
                                         ephemeral: true,
@@ -402,7 +404,7 @@ function createInteractionContext<T>(): InteractionFlowContextProvider<T> {
                             }
 
                             if (interaction.isMessageComponent() || (interaction.isModalSubmit() && interaction.isFromMessage())) {
-                                if (interaction.replied) {
+                                if (interaction.deferred || interaction.replied) {
                                     return interaction.editReply(message);
 
                                 } else {
@@ -410,7 +412,7 @@ function createInteractionContext<T>(): InteractionFlowContextProvider<T> {
                                 }
 
                             } else {
-                                if (interaction.replied) {
+                                if (interaction.deferred || interaction.replied) {
                                     return interaction.editReply(message);
 
                                 } else {
