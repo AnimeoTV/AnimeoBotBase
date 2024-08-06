@@ -1,21 +1,22 @@
 {
+    "name": "@animeo/bot-base",
+    "author": "LXGIC",
+    "version": "1.1.0",
     "type": "module",
-    "name": "animeo-bot-base",
-    "version": "1.0.0",
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
     "scripts": {
         "build": "tsc"
     },
+    "files": [
+        "dist/**/*.js",
+        "dist/**/*.ts"
+    ],
     "peerDependencies": {
-        "discord.js": "^14.14.1",
+        "discord.js": "^14.15.3",
         "tlru": "^1.0.2"
     },
     "devDependencies": {
-        "typescript": "^5.2.2"
-    },
-    "files": [
-        "dist"
-    ],
-    "author": "LXGIC"
+        "typescript": "^5.4.5"
+    }
 }

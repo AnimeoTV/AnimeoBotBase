@@ -1,5 +1,6 @@
-import Discord, { Collection }  from "discord.js"
-import { TLRU }                 from "tlru";
+import * as Discord     from"discord.js";
+import { Collection }   from "discord.js"
+import { TLRU }         from "tlru";
 
 
 //////////////////////////////////////
@@ -328,6 +329,7 @@ function createInteractionContext<T>(): InteractionFlowContextProvider<T> {
 
             const getRoute = (): InteractionFlowRoute<T> | undefined => {
                 if (interaction.isStringSelectMenu()) {
+                    // @ts-ignore
                     const route = null
                         || this.routes.find((route) => (route.path === params.id + ":" + interaction.values.join(":")))
                         || this.routes.find((route) => (route.path === params.id + ":*"));

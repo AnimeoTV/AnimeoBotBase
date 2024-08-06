@@ -1,5 +1,5 @@
 import "./extends.js";
-import Discord                              from "discord.js";
+import * as Discord                         from "discord.js";
 import { registerCommands, callCommands }   from "./utils.js";
 import type { MySlashCommand }              from "./utils.js";
 import InteractionManager                   from "./interaction.js";
