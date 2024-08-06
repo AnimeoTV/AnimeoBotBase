@@ -111,7 +111,8 @@ export type InteractionFlowNextFunction            = () => void;
 export type InteractionFlowMiddlewareFunction<T>   = (context: InteractionFlowContext<T>, next: InteractionFlowNextFunction) => any;
 
 export type InteractionFlowReplyExtraOptions = {
-    new?: boolean;
+    new?        : boolean;
+    ephemeral?  : boolean;
 };
 
 export interface InteractionFlowContext<T> {
@@ -394,13 +395,13 @@ function createInteractionContext<T>(): InteractionFlowContextProvider<T> {
                                 if (interaction.deferred || interaction.replied) {
                                     return interaction.followUp({
                                         ...message,
-                                        ephemeral: true,
+                                        ephemeral: options.ephemeral ?? true,
                                     });
 
                                 } else {
                                     return interaction.reply({
                                         ...message,
-                                        ephemeral: true,
+                                        ephemeral: options.ephemeral ?? true,
                                     });
                                 }
                             }
@@ -420,7 +421,7 @@ function createInteractionContext<T>(): InteractionFlowContextProvider<T> {
                                 } else {
                                     return interaction.reply({
                                         ...message,
-                                        ephemeral: true,
+                                        ephemeral: options.ephemeral ?? true,
                                     });
                                 }
                             }
